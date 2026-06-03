@@ -282,18 +282,13 @@ public String handleRegister(@ModelAttribute User user, Model model) {
         return "redirect:/admin/posts";
     }
 
-  @Transactional // Đảm bảo toàn bộ lệnh xóa là 1 khối thống nhất
+  @Transactional
 @GetMapping("/admin/posts/delete/{id}")
 public String deletePost(@PathVariable Long id) {
-    // 1. Xóa các bản ghi liên quan ở bảng SavedNews
     savedNewsRepository.deleteByPostId(id);
-    
-    // 2. Xóa các bản ghi liên quan ở bảng Comments
     commentRepository.deleteByPostId(id);
-    
-    // 3. Cuối cùng mới xóa bài viết chính
-    postRepository.deleteById(id);
-    
+    historyRepository.deleteByPostId(id); // Dọn dẹp bảng History
+    postRepository.deleteById(id);        // Xóa bài viết chính
     return "redirect:/admin/posts";
 }
 
