@@ -50,49 +50,62 @@ private SavedNewsRepository savedNewsRepository;
 @Autowired
 private HistoryRepository historyRepository;
 
-    // ================= TRANG CHỦ =================
+  // ================= TRANG CHỦ =================
 
-@GetMapping("/")
-public String getHomePage(Model model, HttpSession session) {
+    @GetMapping("/")
+    public String getHomePage(Model model, HttpSession session) {
 
-    // 1. Lấy tất cả bài viết gốc từ database
-    List<Post> allPosts = postRepository.findAll();
+        List<Post> allPosts = postRepository.findAll();
 
-    // 2. LỌC BÀI CHO TRANG CHỦ: Chỉ giữ lại bài viết KHÔNG THUỘC danh mục "Thảo luận"
-    List<Post> homepagePosts = allPosts.stream()
-            .filter(p -> p.getCategory() == null || !"Thảo luận".equals(p.getCategory().getName()))
-            .collect(Collectors.toList());
+        model.addAttribute("posts", allPosts);
+        model.addAttribute("categories", categoryRepository.findAll());
 
-    // 3. LỌC BÀI NỔI BẬT: Lấy từ danh sách trang chủ đã lọc để bài thảo luận không bị lọt lên slide to
-    List<Post> featuredPosts = homepagePosts.stream()
-            .limit(6)
-            .collect(Collectors.toList());
+        model.addAttribute(
+                "featuredPosts",
+                allPosts.stream().limit(6).collect(Collectors.toList())
+        );
 
-    // 4. Đẩy dữ liệu sạch sang file index.html
-    model.addAttribute("posts", homepagePosts);
-    model.addAttribute("featuredPosts", featuredPosts);
-    model.addAttribute("categories", categoryRepository.findAll());
-    model.addAttribute("userRole", session.getAttribute("userRole"));
+        model.addAttribute("userRole", session.getAttribute("userRole"));
 
-    return "index";
-}
+        return "index";
+    }
 
     // ================= CHI TIẾT BÀI VIẾT =================
 
-    @GetMapping("/tin-tuc/{id}")
-    public String getPostDetail(@PathVariable Long id, Model model) {
+   @GetMapping("/tin-tuc/{id}")
+public String getPostDetail(@PathVariable Long id, Model model, HttpSession session) {
+    Post post = postRepository.findById(id).orElse(null);
+    if (post == null) return "redirect:/";
 
-        Post post = postRepository.findById(id).orElse(null);
+    // 1. Lấy danh sách tin hot (3 bài mới nhất hoặc hot nhất)
+    // Lưu ý: Đảm bảo bạn đã định nghĩa hàm này trong PostRepository
+    List<Post> hotPosts = postRepository.findTop3ByOrderByCreatedDateDesc();
+    model.addAttribute("hotPosts", hotPosts);
 
-        if (post == null) {
-            return "redirect:/";
+    // 2. Xử lý lưu lịch sử và trạng thái đã lưu
+    String username = (String) session.getAttribute("username");
+    boolean isSaved = false;
+
+    if (username != null) {
+        User user = userRepository.findByUsername(username);
+        
+        // Ghi nhận lịch sử xem
+        History history = new History();
+        history.setUsername(username);
+        history.setPost(post);
+        history.setViewedAt(java.time.LocalDateTime.now());
+        historyRepository.save(history);
+
+        // Kiểm tra xem user đã lưu bài này chưa
+        if (user != null) {
+           isSaved = savedNewsRepository.existsByUserAndPost_Id(user, id);
         }
-
-        model.addAttribute("post", post);
-        model.addAttribute("posts", postRepository.findAll());
-
-        return "HoSoQuanTriVien/post-detail";
     }
+    
+    model.addAttribute("isSaved", isSaved);
+    model.addAttribute("post", post);
+    return "HoSoQuanTriVien/post-detail";
+}
 
     // ================= LOGIN =================
 
@@ -260,49 +273,13 @@ public String handleRegister(@ModelAttribute User user, Model model) {
     }
 
     @PostMapping("/admin/posts/save")
-public String savePost(@ModelAttribute Post post, @RequestParam(required = false) Long categoryId, HttpSession session) {
-    // 1. Lấy thông tin tài khoản đang đăng nhập từ Session
-    String username = (String) session.getAttribute("username");
-    String userRole = (String) session.getAttribute("userRole");
-
-    // Gán tên người đăng nhập vào trường Author (Tác giả) của bài viết
-    if (username != null) {
-        post.setAuthor(username);
-    }
-
-    // 2. TỰ ĐỘNG PHÂN LUỒNG BÀI VIẾT DỰA VÀO QUYỀN (ROLE)
-    if ("ADMIN".equals(userRole)) {
-        // Nếu là ADMIN đăng bài: Giữ nguyên logic cũ, gán danh mục được chọn từ giao diện quản trị
+    public String savePost(@ModelAttribute Post post, @RequestParam(required = false) Long categoryId) {
         if (categoryId != null) {
             categoryRepository.findById(categoryId).ifPresent(post::setCategory);
         }
-    } else {
-        // Nếu là USER thường đăng bài: Ép bài viết vào danh mục "Thảo luận"
-        Category discussionCat = categoryRepository.findByName("Thảo luận");
-        
-        // Phòng trường hợp trong database chưa có tên danh mục này, hệ thống sẽ tự tạo mới luôn
-        if (discussionCat == null) {
-            discussionCat = new Category();
-            discussionCat.setName("Thảo luận");
-            categoryRepository.save(discussionCat);
-        }
-        
-        // Gắn danh mục Thảo luận vào bài viết của User
-        post.setCategory(discussionCat);
+        postRepository.save(post);
+        return "redirect:/admin/posts";
     }
-
-    // 3. Lưu bài viết vào Database
-    postRepository.save(post);
-
-    // 4. ĐIỀU HƯỚNG TRANG SAU KHI ĐĂNG THÀNH CÔNG
-    if (!"ADMIN".equals(userRole)) {
-        // Nếu là User thường, đăng xong đẩy họ thẳng sang trang riêng /thao-luan để xem bài viết
-        return "redirect:/thao-luan";
-    }
-    
-    // Nếu là Admin thì quay về danh sách quản lý bài viết của Admin
-    return "redirect:/admin/posts";
-}
 
     @GetMapping("/admin/posts/delete/{id}")
     public String deletePost(@PathVariable Long id) {
@@ -492,14 +469,40 @@ public String showHistory(Model model, HttpSession session) {
     String username = (String) session.getAttribute("username");
     if (username == null) return "redirect:/login";
 
-    List<History> historyList = historyRepository.findByUsername(username);
+    // Gọi hàm từ Repository
+    List<History> historyList = historyRepository.findByUsernameOrderByViewedAtDesc(username);
     
-    model.addAttribute("history", historyList);
+    // Tên biến 'historyList' ở đây phải khớp với 'historyList' trong file HTML
+    model.addAttribute("historyList", historyList); 
     model.addAttribute("user", userRepository.findByUsername(username));
+    
     return "HoSoNguoiDung/history";
 }
 
-// ================= ĐĂNG BÀI VIẾT MỚI (DÀNH CHO USER) =================
+// ================= LƯU BÀI VIẾT =================
+    @PostMapping("/tin-tuc/save-news")
+    public String saveNews(@RequestParam Long postId, HttpSession session) {
+        String username = (String) session.getAttribute("username");
+        if (username == null) return "redirect:/login";
+
+        User user = userRepository.findByUsername(username);
+        Post post = postRepository.findById(postId).orElse(null);
+
+        if (user != null && post != null) {
+            // Kiểm tra tránh lưu trùng
+            // Thay vì existsByUserAndPostId, hãy dùng:
+boolean exists = savedNewsRepository.existsByUserAndPost_Id(user, postId);
+            if (!exists) {
+                SavedNews savedNews = new SavedNews();
+                savedNews.setUser(user);
+                savedNews.setPost(post);
+                savedNewsRepository.save(savedNews);
+            }
+        }
+        return "redirect:/tin-tuc/" + postId;
+    }
+
+    // ================= ĐĂNG BÀI VIẾT MỚI (DÀNH CHO USER) =================
 
 // 1. Hàm hiển thị giao diện viết bài mới (Khi user click vào nút Đăng bài)
 @GetMapping("/create-post")
@@ -522,7 +525,6 @@ public String showCreatePostForm(Model model, HttpSession session) {
     // Nếu bạn cất file này trong thư mục HoSoNguoiDung thì sửa thành "HoSoNguoiDung/create-post"
     return "HoSoNguoiDung/create-post"; 
 }
-
 
 // ================= TRANG RIÊNG BIỆT DÀNH CHO THẢO LUẬN =================
 

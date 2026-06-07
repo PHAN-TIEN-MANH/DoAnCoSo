@@ -12,9 +12,11 @@ import java.util.List;
 @Repository
 public interface HistoryRepository extends JpaRepository<History, Long> {
     
+    // THÊM DÒNG NÀY ĐỂ GIẢI QUYẾT LỖI "CANNOT FIND SYMBOL"
+    List<History> findByUsername(String username);
+    
     List<History> findByUsernameOrderByViewedAtDesc(String username);
 
-    // THÊM ĐOẠN NÀY ĐỂ DỌN DẸP LỊCH SỬ KHI BÀI VIẾT BỊ XÓA
     @Transactional
     @Modifying
     @Query("DELETE FROM History h WHERE h.post.id = :postId")
