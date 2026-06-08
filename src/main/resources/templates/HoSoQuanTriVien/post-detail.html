@@ -4,92 +4,516 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title th:text="${post.title} + ' - NewsApp'">Chi tiết bài viết</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&family=Source+Serif+4:wght@300;400;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
-    body { background: #f8fafc; color: #333; line-height: 1.6; }
-    .wrapper { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-    .post-content { background: #fff; padding: 30px; border-radius: 16px; border: 1px solid #e2e8f0; }
-    
-    /* CSS cho nút Lưu */
-    .save-btn { background: #fff; border: 1px solid #e2e8f0; padding: 8px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; color: #475569; font-weight: 600; transition: 0.3s; }
-    .save-btn:hover { background: #f0f9ff; border-color: #0ea5e9; color: #0ea5e9; }
-    .saved-btn { background: #f0f9ff; border: 1px solid #0ea5e9; padding: 8px 16px; border-radius: 8px; display: flex; align-items: center; gap: 8px; color: #0ea5e9; font-weight: 600; cursor: default; }
+    :root {
+      --ink: #0d0d0d;
+      --ink-soft: #2c2c2c;
+      --paper: #faf9f7;
+      --paper-warm: #f4f1eb;
+      --accent: #c0392b;
+      --border: #ddd9d0;
+      --gray: #7a7065;
+      --gray-light: #e8e4dc;
+      --white: #ffffff;
+    }
 
-    /* Style bình luận */
-    .comment-section { margin-top: 30px; padding-top: 30px; border-top: 2px solid #f1f5f9; }
-    .comment-item { background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 4px solid #0ea5e9; }
-    textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; margin-top: 10px; }
-    .btn-submit { background: #0ea5e9; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); line-height: 1.6; }
+    .wrapper { max-width: 1240px; margin: 0 auto; padding: 0 28px; }
+
+    /* ── TOP BAR ── */
+    .top-bar {
+      background: var(--ink); color: rgba(255,255,255,0.5);
+      font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; padding: 7px 0;
+    }
+    .top-bar .wrapper { display: flex; justify-content: space-between; align-items: center; }
+    .top-bar a { color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.2s; }
+    .top-bar a:hover { color: #fff; }
+
+    /* ── HEADER ── */
+    .site-header {
+      background: var(--white);
+      border-bottom: 3px solid var(--ink);
+      padding: 16px 0 0;
+    }
+    .header-inner {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-bottom: 14px; border-bottom: 1px solid var(--border);
+    }
+    .logo-wrap { display: flex; flex-direction: column; gap: 3px; }
+    .logo-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px; font-weight: 900;
+      color: var(--ink); letter-spacing: -1px; line-height: 1;
+      text-decoration: none; display: block;
+    }
+    .logo-text span { color: var(--accent); }
+    .logo-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gray); }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      text-decoration: none; color: var(--gray);
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 9px 18px; border: 1.5px solid var(--border);
+      border-radius: 6px; transition: 0.2s;
+    }
+    .back-btn:hover { color: var(--ink); border-color: var(--ink); background: var(--paper-warm); }
+
+    /* ── NAV ── */
+    .nav-bar { background: var(--white); border-bottom: 1px solid var(--border); }
+    .nav-inner { display: flex; overflow-x: auto; }
+    .nav-inner::-webkit-scrollbar { display: none; }
+    .nav-inner a {
+      text-decoration: none; color: var(--gray);
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 12px 16px; white-space: nowrap;
+      transition: 0.2s; border-bottom: 2.5px solid transparent;
+    }
+    .nav-inner a:hover { color: var(--ink); border-bottom-color: var(--ink); }
+
+    /* ── BREADCRUMB ── */
+    .breadcrumb {
+      display: flex; align-items: center; gap: 8px;
+      padding: 18px 0 0;
+      font-size: 11.5px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      color: var(--gray);
+    }
+    .breadcrumb a { color: var(--gray); text-decoration: none; transition: color 0.2s; }
+    .breadcrumb a:hover { color: var(--accent); }
+    .breadcrumb i { font-size: 9px; }
+
+    /* ── MAIN LAYOUT ── */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 48px;
+      padding: 32px 0 80px;
+      align-items: start;
+    }
+
+    /* ── ARTICLE ── */
+    .article-wrap {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .article-hero { position: relative; overflow: hidden; }
+    .article-hero img {
+      width: 100%; height: 460px;
+      object-fit: cover; display: block;
+      transition: transform 0.6s ease;
+    }
+    .article-hero:hover img { transform: scale(1.02); }
+    .article-category-badge {
+      position: absolute; top: 20px; left: 20px;
+      background: var(--accent); color: var(--white);
+      font-size: 10px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      padding: 5px 12px; border-radius: 3px;
+    }
+
+    .article-body { padding: 40px 44px 36px; }
+
+    .article-meta {
+      display: flex; align-items: center; gap: 18px;
+      margin-bottom: 20px;
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--gray);
+    }
+    .article-meta .cat-tag {
+      color: var(--accent); border: 1.5px solid var(--accent);
+      padding: 3px 10px; border-radius: 3px;
+    }
+    .article-meta .dot { width: 3px; height: 3px; background: var(--gray-light); border-radius: 50%; }
+
+    .article-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px; font-weight: 900;
+      line-height: 1.2; color: var(--ink);
+      letter-spacing: -0.5px; margin-bottom: 20px;
+    }
+
+    .article-divider {
+      width: 48px; height: 3px; background: var(--accent);
+      margin-bottom: 28px;
+    }
+
+    .article-content {
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 17px; font-weight: 300;
+      line-height: 1.9; color: var(--ink-soft);
+    }
+    .article-content p { margin-bottom: 20px; }
+    .article-content h2, .article-content h3 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 800; color: var(--ink);
+      margin: 32px 0 14px;
+    }
+    .article-content h2 { font-size: 24px; }
+    .article-content h3 { font-size: 20px; }
+    .article-content img { width: 100%; border-radius: 4px; margin: 24px 0; }
+    .article-content blockquote {
+      border-left: 3px solid var(--accent);
+      padding: 12px 24px; margin: 24px 0;
+      background: var(--paper-warm);
+      font-style: italic; color: var(--gray);
+    }
+
+    /* Save btn */
+    .action-bar {
+      display: flex; align-items: center; gap: 12px;
+      padding: 22px 0;
+      margin: 0 44px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .save-btn, .saved-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 9px 20px; border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12.5px; font-weight: 700;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      cursor: pointer; transition: 0.2s;
+    }
+    .save-btn {
+      background: var(--white); border: 1.5px solid var(--border);
+      color: var(--gray);
+    }
+    .save-btn:hover { border-color: var(--ink); color: var(--ink); background: var(--paper-warm); }
+    .saved-btn {
+      background: var(--paper-warm); border: 1.5px solid var(--ink);
+      color: var(--ink); cursor: default;
+    }
+
+    /* ── COMMENTS ── */
+    .comment-section { padding: 36px 44px 40px; }
+    .comment-heading {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px; font-weight: 800;
+      color: var(--ink); margin-bottom: 24px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .comment-heading::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    /* Comment form */
+    .comment-form { margin-bottom: 36px; }
+    .comment-form textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 400;
+      color: var(--ink); background: var(--paper);
+      resize: vertical; min-height: 110px;
+      outline: none; transition: border-color 0.2s;
+    }
+    .comment-form textarea:focus { border-color: var(--ink); background: var(--white); }
+    .comment-form textarea::placeholder { color: var(--gray); }
+    .comment-submit {
+      margin-top: 12px;
+      padding: 11px 24px;
+      background: var(--ink); color: var(--white);
+      border: none; border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12.5px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .comment-submit:hover { background: var(--accent); }
+
+    /* Comment items */
+    .comment-item {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex; gap: 16px;
+    }
+    .comment-item:first-of-type { border-top: 1px solid var(--border); }
+    .comment-avatar {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--ink); color: var(--white);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 13px; flex-shrink: 0;
+    }
+    .comment-body { flex: 1; }
+    .comment-author {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 6px;
+    }
+    .comment-author strong { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+    .comment-author time { font-size: 11px; font-weight: 600; color: var(--gray); text-transform: uppercase; letter-spacing: 0.05em; }
+    .comment-text {
+      font-family: 'Source Serif 4', serif;
+      font-size: 14.5px; font-weight: 300;
+      color: var(--ink-soft); line-height: 1.75;
+    }
+    .no-comment {
+      font-size: 13.5px; color: var(--gray);
+      font-style: italic; padding: 20px 0;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar { display: flex; flex-direction: column; gap: 28px; }
+
+    .sidebar-box {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .sidebar-label {
+      font-size: 9px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.15em;
+      color: var(--gray); padding: 14px 20px 12px;
+      border-bottom: 2px solid var(--ink);
+      display: block;
+    }
+    .hot-list { padding: 8px 0; }
+    .hot-item {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .hot-item:last-child { border-bottom: none; }
+    .hot-item:hover { background: var(--paper-warm); }
+    .hot-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px; font-weight: 900;
+      color: var(--gray-light); line-height: 1;
+      min-width: 28px; flex-shrink: 0;
+    }
+    .hot-item:hover .hot-num { color: var(--accent); opacity: 0.5; }
+    .hot-title {
+      font-size: 13px; font-weight: 600;
+      color: var(--ink-soft); line-height: 1.5;
+      transition: color 0.2s;
+    }
+    .hot-item:hover .hot-title { color: var(--accent); }
+
+    /* Footer */
+    .site-footer {
+      background: var(--ink); color: rgba(255,255,255,0.5);
+      padding: 48px 0 28px;
+      border-top: 3px solid var(--accent);
+    }
+    .footer-inner {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 40px; flex-wrap: wrap;
+    }
+    .footer-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px; font-weight: 900;
+      color: var(--white); letter-spacing: -0.5px;
+      display: block; margin-bottom: 8px;
+    }
+    .footer-logo span { color: var(--accent); }
+    .footer-copy {
+      margin-top: 36px; padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      font-size: 10.5px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.07em;
+      display: flex; justify-content: space-between;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .main-layout { grid-template-columns: 1fr; }
+      .article-body, .action-bar, .comment-section { padding-left: 24px; padding-right: 24px; }
+      .action-bar { margin: 0 24px; }
+      .article-title { font-size: 26px; }
+    }
   </style>
 </head>
 <body>
 
-  <header style="background: #ffffff; padding: 15px 0; border-bottom: 3px solid #0ea5e9; margin-bottom: 40px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-    <div class="wrapper" style="display: flex; align-items: center; justify-content: space-between;">
-        <div class="logo" style="display: flex; align-items: center; gap: 10px;">
-            <span style="font-size: 26px;">📰</span>
-            <h2 style="color: #0ea5e9; font-weight: 800; font-size: 24px; margin: 0;">NewsApp</h2>
-        </div>
-        <nav>
-            <a href="/" style="text-decoration: none; color: #b91c1c; font-weight: 700; font-size: 14px; padding: 8px 16px; border-radius: 8px; border: 1px solid #b91c1c; background: #fff5f5;">← Quay về trang chủ</a>
-        </nav>
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="wrapper">
+      <span>Thứ Hai, ngày 8 tháng 6 năm 2026</span>
+      <div style="display:flex;gap:18px;">
+        <a href="#"><i class="fab fa-facebook-f" style="font-size:10px;"></i></a>
+        <a href="#"><i class="fab fa-youtube" style="font-size:10px;"></i></a>
+        <a href="#"><i class="fab fa-tiktok" style="font-size:10px;"></i></a>
+      </div>
     </div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="wrapper">
+      <div class="header-inner">
+        <div class="logo-wrap">
+          <a href="/" th:href="@{/}" class="logo-text"><span>News</span>App</a>
+          <span class="logo-tag">Tin tức chính xác · 24/7</span>
+        </div>
+        <a href="/" th:href="@{/}" class="back-btn">
+          <i class="fa-solid fa-arrow-left"></i> Trang chủ
+        </a>
+      </div>
+    </div>
+    <nav class="nav-bar">
+      <div class="wrapper">
+        <div class="nav-inner">
+          <a href="/" th:href="@{/}">Trang chủ</a>
+          <a href="#">Thời sự</a>
+          <a href="#">Công nghệ</a>
+          <a href="#">Giải trí</a>
+          <a href="#">Thể thao</a>
+          <a href="#">Kinh doanh</a>
+          <a href="#">Sức khỏe</a>
+          <a href="#">Du lịch</a>
+          <a href="#">Giáo dục</a>
+          <a href="#" th:href="@{/thao-luan}">Thảo luận</a>
+        </div>
+      </div>
+    </nav>
   </header>
 
-  <main class="wrapper" style="display: grid; grid-template-columns: 2fr 1fr; gap: 40px;">
-    <div class="post-content">
-      <img th:src="${post.imageUrl}" style="width: 100%; height: 400px; object-fit: cover; border-radius: 12px;">
-      <h1 th:text="${post.title}" style="margin: 20px 0;"></h1>
-      <article th:utext="${post.content}"></article>
+  <!-- BREADCRUMB -->
+  <div class="wrapper">
+    <div class="breadcrumb">
+      <a href="/" th:href="@{/}">Trang chủ</a>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span th:text="${post.category != null ? post.category.name : 'Tin tức'}">Danh mục</span>
+      <i class="fa-solid fa-chevron-right"></i>
+      <span th:text="${#strings.abbreviate(post.title, 60)}">Tiêu đề bài viết</span>
+    </div>
+  </div>
 
-      <div style="margin: 30px 0; padding: 20px 0; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;">
-        <button th:if="${isSaved}" class="saved-btn">
+  <!-- MAIN -->
+  <div class="wrapper">
+    <div class="main-layout">
+
+      <!-- ARTICLE -->
+      <article class="article-wrap">
+
+        <div class="article-hero">
+          <img th:src="${post.imageUrl}" alt="">
+          <span class="article-category-badge"
+                th:text="${post.category != null ? post.category.name : 'Tin tức'}">Danh mục</span>
+        </div>
+
+        <div class="article-body">
+          <div class="article-meta">
+            <span class="cat-tag" th:text="${post.category != null ? post.category.name : 'Tin tức'}">Danh mục</span>
+            <span class="dot"></span>
+            <span>NewsApp</span>
+          </div>
+
+          <h1 class="article-title" th:text="${post.title}">Tiêu đề bài viết</h1>
+          <div class="article-divider"></div>
+
+          <div class="article-content" th:utext="${post.content}"></div>
+        </div>
+
+        <!-- ACTION BAR -->
+        <div class="action-bar">
+          <button th:if="${isSaved}" class="saved-btn">
             <i class="fa-solid fa-bookmark"></i> Đã lưu bài viết
-        </button>
-        <form th:unless="${isSaved}" th:action="@{/tin-tuc/save-news}" method="POST" style="display: inline-block;">
+          </button>
+          <form th:unless="${isSaved}" th:action="@{/tin-tuc/save-news}" method="POST" style="display:inline;">
             <input type="hidden" name="postId" th:value="${post.id}">
             <button type="submit" class="save-btn">
-                <i class="fa-regular fa-bookmark"></i> Lưu bài viết
+              <i class="fa-regular fa-bookmark"></i> Lưu bài viết
             </button>
-        </form>
-      </div>
+          </form>
+        </div>
 
-      <section class="comment-section">
-        <h3>Bình luận</h3>
-        <form th:action="@{/tin-tuc/comment/save}" method="post" style="margin-bottom: 30px;">
+        <!-- COMMENTS -->
+        <section class="comment-section">
+          <h3 class="comment-heading">Bình luận</h3>
+
+          <form class="comment-form" th:action="@{/tin-tuc/comment/save}" method="post">
             <input type="hidden" name="postId" th:value="${post.id}">
-            <textarea name="content" placeholder="Chia sẻ ý kiến của bạn..." required></textarea>
-            <button type="submit" class="btn-submit">Gửi bình luận</button>
-        </form>
+            <textarea name="content" placeholder="Chia sẻ ý kiến của bạn về bài viết này..." required></textarea>
+            <button type="submit" class="comment-submit">
+              <i class="fa-regular fa-paper-plane"></i> Gửi bình luận
+            </button>
+          </form>
 
-        <div th:each="cmt : ${post.comments}" class="comment-item">
-            <strong th:text="${cmt.username}"></strong> 
-            <small style="color: #888;" th:text="'(' + ${cmt.getFormattedDate()} + ')'"></small>
-            <p th:text="${cmt.content}"></p>
-        </div>
-        <p th:if="${#lists.isEmpty(post.comments)}" style="color: #999;">Chưa có bình luận nào.</p>
-      </section>
-    </div>
+          <div th:each="cmt : ${post.comments}" class="comment-item">
+            <div class="comment-avatar"
+                 th:text="${cmt.username != null ? #strings.substring(cmt.username,0,1).toUpperCase() : '?'}">U</div>
+            <div class="comment-body">
+              <div class="comment-author">
+                <strong th:text="${cmt.username}">Username</strong>
+                <time th:text="'(' + ${cmt.getFormattedDate()} + ')'"></time>
+              </div>
+              <p class="comment-text" th:text="${cmt.content}">Nội dung bình luận</p>
+            </div>
+          </div>
 
-    <aside style="width: 100%;">
-    <div style="background: #ffffff; padding: 25px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-        <h3 style="margin-bottom: 20px; font-size: 18px; border-left: 4px solid #b91c1c; padding-left: 12px; color: #1e293b;">
-            Tin hot trong tuần
-        </h3>
-        
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-            <a th:each="post, iter : ${hotPosts}" 
-               th:href="@{'/tin-tuc/' + ${post.id}}" 
-               style="text-decoration: none; display: flex; gap: 15px; align-items: center;">
-                
-                <span style="font-size: 24px; font-weight: 900; color: #cbd5e1;" th:text="${iter.count < 10 ? '0' + iter.count : iter.count}">01</span>
-                
-                <p style="color: #334155; font-weight: 600; font-size: 14px; line-height: 1.4;" th:text="${post.title}">Tiêu đề bài viết</p>
+          <p th:if="${#lists.isEmpty(post.comments)}" class="no-comment">
+            Chưa có bình luận nào. Hãy là người đầu tiên!
+          </p>
+        </section>
+
+      </article>
+
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div class="sidebar-box">
+          <span class="sidebar-label">Tin hot trong tuần</span>
+          <div class="hot-list">
+            <a th:each="hotPost, iter : ${hotPosts}"
+               th:href="@{'/tin-tuc/' + ${hotPost.id}}"
+               class="hot-item">
+              <span class="hot-num" th:text="${iter.count < 10 ? '0' + iter.count : iter.count}">01</span>
+              <span class="hot-title" th:text="${hotPost.title}">Tiêu đề bài viết hot</span>
             </a>
+          </div>
         </div>
+      </aside>
+
     </div>
-</aside>
-  </main>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="wrapper">
+      <div class="footer-inner">
+        <div>
+          <span class="footer-logo"><span>News</span>App</span>
+          <p style="font-size:13px;line-height:1.8;max-width:280px;">Trang tin tức điện tử hiện đại, cung cấp thông tin nhanh chóng và chính xác.</p>
+        </div>
+        <div style="display:flex;gap:50px;flex-wrap:wrap;">
+          <div>
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.25);margin-bottom:14px;">Chuyên mục</div>
+            <div style="display:flex;flex-direction:column;gap:9px;">
+              <a href="#" style="color:rgba(255,255,255,0.45);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.45)'">Thời sự</a>
+              <a href="#" style="color:rgba(255,255,255,0.45);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.45)'">Công nghệ</a>
+              <a href="#" style="color:rgba(255,255,255,0.45);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.45)'">Thể thao</a>
+              <a href="#" style="color:rgba(255,255,255,0.45);text-decoration:none;font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.45)'">Kinh doanh</a>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.12em;color:rgba(255,255,255,0.25);margin-bottom:14px;">Theo dõi</div>
+            <div style="display:flex;flex-direction:column;gap:9px;">
+              <a href="#" style="color:rgba(255,255,255,0.45);text-decoration:none;font-size:13px;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.45)'"><i class="fab fa-facebook-f" style="width:14px;"></i> Facebook</a>
+              <a href="#" style="color:rgba(255,255,255,0.45);text-decoration:none;font-size:13px;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.45)'"><i class="fab fa-youtube" style="width:14px;"></i> YouTube</a>
+              <a href="#" style="color:rgba(255,255,255,0.45);text-decoration:none;font-size:13px;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.45)'"><i class="fab fa-tiktok" style="width:14px;"></i> TikTok</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-copy">
+        <span>© 2026 NewsApp Project</span>
+        <span>Spring Boot · Thymeleaf</span>
+      </div>
+    </div>
+  </footer>
+
 </body>
 </html>
