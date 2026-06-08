@@ -9,11 +9,8 @@ import java.util.List;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
     
-    // Phương thức hiện có của bạn
-    List<Post> findByCategory(Category category);
-    
-    // Thêm phương thức này để phục vụ mục "Tin hot trong tuần"
-    // Lưu ý: Nếu trong model Post của bạn thuộc tính là createdAt, hãy dùng OrderByCreatedAtDesc
-    // Nếu là createdDate, hãy dùng OrderByCreatedDateDesc
+    List<Post> findByCategory(Category category); 
+    List<Post> findByCategoryId(Long categoryId); 
+    List<Post> findByCategory_Name(String categoryName); 
     List<Post> findTop3ByOrderByCreatedDateDesc();
 }

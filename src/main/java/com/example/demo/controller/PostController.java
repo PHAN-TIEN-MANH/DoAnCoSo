@@ -545,5 +545,20 @@ public String showDiscussionPage(Model model) {
     return "HoSoNguoiDung/thao-luan";
 }
 
+@GetMapping("/category/{id}")
+public String getPostsByCategory(@PathVariable Long id, Model model) {
+    // 1. Lấy danh sách bài viết thuộc danh mục này
+    List<Post> posts = postRepository.findByCategoryId(id);
+    
+    // 2. Lấy tên danh mục để hiển thị tiêu đề trang
+    Category category = categoryRepository.findById(id).orElse(null);
+    
+    model.addAttribute("posts", posts);
+    model.addAttribute("featuredPosts", posts);
+    model.addAttribute("categoryName", category != null ? category.getName() : "Danh mục");
+    
+    // Trả về file index hoặc một file chuyên hiển thị theo danh mục (ví dụ: category.html)
+    return "index"; 
+}
 
 }
